@@ -1,5 +1,5 @@
 name: 'Deploy to IIS (Powershell)'
-description: 'Deploys to IIS via powershell. Copies current webroot folder to a new folder with new name. Copies source path to new folder. Sets IIS-site webroot to new folder.'
+description: 'Deploys to IIS via powershell. Copies webroot folder. Deploys source to new path. Sets IIS-site path to new path.'
 
 branding:
   icon: 'external-link'
