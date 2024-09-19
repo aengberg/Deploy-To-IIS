@@ -1,0 +1,107 @@
+name: 'Deploy IIS action'
+
+inputs:
+    sitename:
+        description: 'IIS Sitename'
+        type: string
+        required: true
+    sourcepath:
+        description: 'Source path'
+        type: string
+        required: true
+    useappoffline:
+        description: 'Use app_offline.htm'
+        type: bool
+        default: false
+        required: false
+    retentionPolicyName:
+        description: 'Retention policy name'
+        type: string
+        required: false
+    retentionPolicyCount:
+        description: 'Retention policy count'
+        type: int
+        default: 3
+        required: false
+
+runs:
+    using: "composite"
+    steps:
+    - name: Deploy to IIS
+      shell: powershell
+      run: | 
+        Import-Module WebAdministration
+        $inputSiteId = "${{ inputs.sitename }}"
+        $inputSourcePath = "${{ inputs.sourcepath }}"
+        $retentionPolicyName = "${{ inputs.retentionPolicyName }}"
+        $retentionPolicyCount = ${{ inputs.retentionPolicyCount }}
+
+        if(([string]::IsNullOrEmpty($inputSiteId)) -Or ([string]::IsNullOrEmpty($inputSourcePath)))
+        {
+            Write-Host siteId or sourcePath empty - $inputSiteId $inputSourcePath
+            return
+        }
+        
+        $siteId = "IIS:\Sites\$inputSiteId"
+        $sourcePath = $inputSourcePath.TrimEnd('\')
+        $sourcePath = $sourcePath.TrimEnd('\')
+        
+        $currentIISPath = Get-WebFilePath -PSPath $siteId
+
+        if(([string]::IsNullOrEmpty($currentIISPath)) -Or (-Not (Test-Path $currentIISPath)))
+        {
+            Write-Host Cannot deploy - IIS path is wrong
+            return
+        }
+        
+        $parentPath = Split-Path -parent $currentIISPath
+        
+        $packageFolderName = Split-Path -leaf $sourcePath
+        
+        $newIISPath = "$parentPath\$packageFolderName"
+
+        $destinationPath = $newIISPath
+        
+        if (Test-Path $destinationPath) {		
+            $i = 0
+            While (Test-Path $destinationPath) {
+                $i += 1
+                $destinationPath = $newIISPath+"_"+$i
+            }
+        }
+
+        Write-Host Deploying IIS Website: $inputSiteId
+        
+        if({{ inputs.useappoffline }})
+        {
+            if(-Not (Test-Path $destinationPath\app_offline.htm))
+            {
+                New-Item -Path $destinationPath -Name "app_offline.htm" -ItemType "file"
+            }
+        }
+        
+        Write-Host Copying current webroot $destinationPath
+        Copy-Item -Path $currentIISPath -Destination $destinationPath -Recurse -Force
+        
+        Write-Host Copying package $sourcePath to $destinationPath 
+        Copy-Item -Path $sourcePath\* -Destination $destinationPath -Recurse -Force
+        
+        Write-Host Setting webroot for Website $inputSiteId to $destinationPath
+        Set-ItemProperty $siteId -name physicalPath -value $destinationPath
+        
+        if({{ inputs.useappoffline }})
+        {
+            Remove-Item -Path $destinationPath\app_offline.htm
+        }
+        
+        # Remove old folders, keeping n latest
+        if([string]::IsNullOrEmpty($retentionPolicyName))
+        {
+            Write-Host Removing old webroot folders
+            $dirsToDelete = Get-ChildItem -Path $parentPath -Directory -Filter $retentionPolicyName | Sort-Object -Property {$_.LastWriteTime} -Descending | Select-Object Name -Skip $retentionPolicyCount
+            foreach($dir in $dirsToDelete)
+            {
+                $dirName = $dir.Name
+                Remove-Item -Recurse -Force $parentPath\$dirName
+            }
+        }
