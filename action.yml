@@ -72,7 +72,7 @@ runs:
 
         Write-Host Deploying IIS Website: $inputSiteId
         
-        if({{ inputs.useappoffline }} == 'true')
+        if("${{ inputs.useappoffline }}" -eq "true")
         {
             if(-Not (Test-Path $destinationPath\app_offline.htm))
             {
@@ -89,7 +89,7 @@ runs:
         Write-Host Setting webroot for Website $inputSiteId to $destinationPath
         Set-ItemProperty $siteId -name physicalPath -value $destinationPath
         
-        if({{ inputs.useappoffline }})
+        if("${{ inputs.useappoffline }}" -eq "true")
         {
             Remove-Item -Path $destinationPath\app_offline.htm
         }
