@@ -22,5 +22,4 @@ jobs:
         useappoffline: false
         retentionPolicyName: "web-public-1.0*"
         retentionPolicyCount: 3
-		
 ```
