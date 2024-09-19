@@ -8,25 +8,20 @@ branding:
 inputs:
     sitename:
         description: 'IIS Sitename'
-        type: string
         required: true
     sourcepath:
         description: 'Source path'
-        type: string
         required: true
     useappoffline:
-        description: 'Use app_offline.htm'
-        type: bool
-        default: false
+        description: 'Use app_offline.htm false | true (default false)'
+        default: 'false'
         required: false
     retentionPolicyName:
         description: 'Retention policy name'
-        type: string
         required: false
     retentionPolicyCount:
-        description: 'Retention policy count'
-        type: int
-        default: 3
+        description: 'Retention policy count (default 3)'
+        default: '3'
         required: false
 
 runs:
@@ -77,7 +72,7 @@ runs:
 
         Write-Host Deploying IIS Website: $inputSiteId
         
-        if({{ inputs.useappoffline }})
+        if({{ inputs.useappoffline }} == 'true')
         {
             if(-Not (Test-Path $destinationPath\app_offline.htm))
             {

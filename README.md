@@ -19,7 +19,7 @@ jobs:
     with:
         sourcepath: "${{ github.workspace }}/folder"
         sitename: "web-public"
-        useappoffline: false
+        useappoffline: 'false'
         retentionPolicyName: "web-public-1.0*"
-        retentionPolicyCount: 3
+        retentionPolicyCount: '3'
 ```
