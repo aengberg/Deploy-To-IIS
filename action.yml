@@ -95,7 +95,7 @@ runs:
         }
         
         # Remove old folders, keeping n latest
-        if([string]::IsNullOrEmpty($retentionPolicyName))
+        if(![string]::IsNullOrEmpty($retentionPolicyName))
         {
             Write-Host Removing old webroot folders
             $dirsToDelete = Get-ChildItem -Path $parentPath -Directory -Filter $retentionPolicyName | Sort-Object -Property {$_.LastWriteTime} -Descending | Select-Object Name -Skip $retentionPolicyCount
