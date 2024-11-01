@@ -15,7 +15,7 @@ jobs:
   deploy:
   runs-on: windows
   steps:
-  - uses: aengberg/Deploy-To-IIS@v1.0.0
+  - uses: aengberg/Deploy-To-IIS@v1.0.3
     with:
         sourcepath: "${{ github.workspace }}/folder"
         sitename: "web-public"
